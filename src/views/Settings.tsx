@@ -24,6 +24,7 @@ export const SettingsView: React.FC<SettingsProps> = ({
   const [newBlockedWord, setNewBlockedWord] = useState('');
   const [blockedWords, setBlockedWords] = useState<string[]>(profile.blockedWords || []);
   const [simulatedCount, setSimulatedCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(profile.isAdmin || false);
 
   const handleSaveProfile = () => {
     if (!username.trim()) return;
@@ -34,7 +35,8 @@ export const SettingsView: React.FC<SettingsProps> = ({
       displayName: displayName.trim() || username,
       avatarUrl: selectedAvatar,
       moderationEnabled,
-      blockedWords
+      blockedWords,
+      isAdmin
     };
     saveProfile(updated);
     onUpdateProfile(updated);
@@ -93,9 +95,9 @@ export const SettingsView: React.FC<SettingsProps> = ({
     }, 1500);
   };
 
-  const handleResetData = () => {
+  const handleResetData = async () => {
     if (window.confirm("WARNING: This will delete your profile, links, and all received messages. You will be logged out. Do you want to proceed?")) {
-      clearProfile();
+      await clearProfile();
       window.location.reload();
     }
   };
@@ -428,6 +430,60 @@ export const SettingsView: React.FC<SettingsProps> = ({
           )}
         </section>
 
+        {/* Admin Debug Controls */}
+        <section 
+          style={{
+            backgroundColor: '#151A26',
+            borderRadius: '24px',
+            padding: '20px',
+            border: '1px solid #262F42'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              ⚙️ Admin Role
+            </h4>
+            
+            <button 
+              onClick={() => {
+                const nextVal = !isAdmin;
+                setIsAdmin(nextVal);
+                // Save immediately
+                const updatedProfile = { ...profile, isAdmin: nextVal };
+                saveProfile(updatedProfile);
+                onUpdateProfile(updatedProfile);
+              }}
+              style={{
+                width: '44px',
+                height: '24px',
+                borderRadius: '12px',
+                backgroundColor: isAdmin ? '#38BDF8' : '#334155',
+                border: 'none',
+                position: 'relative',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease',
+                padding: '2px'
+              }}
+            >
+              <div 
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  backgroundColor: '#FFFFFF',
+                  position: 'absolute',
+                  top: '2px',
+                  left: isAdmin ? '22px' : '2px',
+                  transition: 'left 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}
+              />
+            </button>
+          </div>
+          <p style={{ fontSize: '0.8rem', color: '#8E9BAE', lineHeight: '1.4' }}>
+            Unlocks the Admin Debug mode inside your message details overlay. Press **Ctrl + Alt + A** inside details to inspect sender metadata logs.
+          </p>
+        </section>
+
         {/* Premium section placeholder */}
         <section 
           style={{
@@ -442,10 +498,14 @@ export const SettingsView: React.FC<SettingsProps> = ({
             👑 Premium Features
           </h4>
           <p style={{ fontSize: '0.8rem', color: '#8E9BAE', lineHeight: '1.4', marginBottom: '16px' }}>
-            Check out premium options, unlock sender hints, customize link themes, and enjoy zero ads.
+            Unlock Pro plans to see advanced sender clues:
+            <br />
+            • **Monthly**: ₹{import.meta.env.VITE_PRICE_MONTHLY || 99}/month
+            <br />
+            • **Yearly**: ₹{import.meta.env.VITE_PRICE_YEARLY || 299}/year
           </p>
           <button
-            onClick={() => alert("Premium features placeholder - payments integration coming soon!")}
+            onClick={() => alert(`Premium features placeholder - payments integration coming soon for ₹${import.meta.env.VITE_PRICE_MONTHLY || 99}/mo!`)}
             style={{
               padding: '12px',
               fontSize: '0.9rem',

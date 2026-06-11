@@ -9,13 +9,15 @@ interface MessageDetailProps {
   onClose: () => void;
   onReply: (msg: AnonymousMessage) => void;
   onDelete: (id: string) => void;
+  adminDebugMode: boolean;
 }
 
 export const MessageDetail: React.FC<MessageDetailProps> = ({
   message,
   onClose,
   onReply,
-  onDelete
+  onDelete,
+  adminDebugMode
 }) => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -178,6 +180,58 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
         </div>
       </div>
 
+      {/* Admin Debug Console Overlay */}
+      {adminDebugMode && (
+        <div 
+          style={{
+            backgroundColor: '#1E293B',
+            border: '2px solid #38BDF8',
+            borderRadius: '20px',
+            padding: '16px',
+            width: '100%',
+            maxWidth: '350px',
+            margin: '0 auto 10px auto',
+            maxHeight: '260px',
+            overflowY: 'auto',
+            textAlign: 'left',
+            boxShadow: '0 8px 30px rgba(56, 189, 248, 0.25)',
+            fontSize: '0.8rem',
+            fontFamily: 'monospace',
+            color: '#E2E8F0',
+            animation: 'fadeInUp 0.3s ease-out'
+          }}
+          className="no-scrollbar"
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '6px', marginBottom: '8px' }}>
+            <span style={{ color: '#38BDF8', fontWeight: 800 }}>🛠️ ADMIN DEBUG PANEL</span>
+            <span style={{ fontSize: '0.7rem', color: '#64748B' }}>Ctrl+Alt+A Active</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <p><strong style={{ color: '#94A3B8' }}>Message ID:</strong> {message.id}</p>
+            <p><strong style={{ color: '#94A3B8' }}>Visitor ID:</strong> {message.senderVisitorId}</p>
+            <p><strong style={{ color: '#94A3B8' }}>Timestamp:</strong> {new Date(message.timestamp).toLocaleString()}</p>
+            <p><strong style={{ color: '#94A3B8' }}>Browser:</strong> {message.browser || 'Unknown'}</p>
+            <p><strong style={{ color: '#94A3B8' }}>OS:</strong> {message.os || 'Unknown'}</p>
+            <p><strong style={{ color: '#94A3B8' }}>Device Type:</strong> {message.deviceType || 'Unknown'}</p>
+            <p><strong style={{ color: '#94A3B8' }}>Resolution:</strong> {message.screenResolution || 'Unknown'}</p>
+            <p><strong style={{ color: '#94A3B8' }}>Language:</strong> {message.language || 'Unknown'}</p>
+            <p><strong style={{ color: '#94A3B8' }}>Timezone:</strong> {message.timezone || 'Unknown'}</p>
+            <p><strong style={{ color: '#94A3B8' }}>Referrer:</strong> {message.referrer || 'Unknown'}</p>
+            <p><strong style={{ color: '#94A3B8' }}>Location:</strong> {`${message.city || 'Unknown'}, ${message.region || 'Unknown'}, ${message.country || 'Unknown'}`}</p>
+            <p><strong style={{ color: '#94A3B8' }}>ISP/Carrier:</strong> {message.isp || 'Unknown'}</p>
+            <p><strong style={{ color: '#94A3B8' }}>Page Visits:</strong> {message.visitCount || 1}</p>
+            <p><strong style={{ color: '#94A3B8' }}>Sender Status:</strong> {message.senderType}</p>
+            <p><strong style={{ color: '#94A3B8' }}>Account Link:</strong> {message.senderUsername ? `@${message.senderUsername}` : 'Anonymous'}</p>
+            <details style={{ marginTop: '8px' }}>
+              <summary style={{ color: '#38BDF8', cursor: 'pointer', outline: 'none', fontWeight: 'bold' }}>Raw JSON Metadata</summary>
+              <pre style={{ backgroundColor: '#0F172A', padding: '8px', borderRadius: '8px', overflowX: 'auto', marginTop: '6px', fontSize: '0.7rem', color: '#38BDF8' }}>
+                {JSON.stringify(message, null, 2)}
+              </pre>
+            </details>
+          </div>
+        </div>
+      )}
+
       {/* Bottom control buttons */}
       <div 
         style={{
@@ -290,8 +344,8 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
               Locked hint for this message:
             </h5>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', opacity: 0.65 }}>
-              <p style={{ fontSize: '0.9rem' }}>📍 Location: <span style={{ filter: 'blur(4px)', userSelect: 'none' }}>{message.locationInfo || "California, USA"}</span></p>
-              <p style={{ fontSize: '0.9rem' }}>📱 Device: <span style={{ filter: 'blur(4px)', userSelect: 'none' }}>{message.deviceInfo || "iPhone 15 Pro"}</span></p>
+              <p style={{ fontSize: '0.9rem' }}>📍 Location: <span style={{ filter: 'blur(4px)', userSelect: 'none' }}>{message.city ? `${message.city}, ${message.country}` : "Delhi, India"}</span></p>
+              <p style={{ fontSize: '0.9rem' }}>📱 Device: <span style={{ filter: 'blur(4px)', userSelect: 'none' }}>{message.os ? `${message.os} (${message.deviceType})` : "Android (Mobile)"}</span></p>
             </div>
           </div>
 
@@ -300,8 +354,10 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
             onClick={() => {
               alert("Payment completed! Pro features are simulated. You can now see the hint details below!");
               // Simulate premium unlock
-              message.locationInfo = message.locationInfo || "New York, USA";
-              message.deviceInfo = message.deviceInfo || "iPhone 15 Pro";
+              message.city = message.city || "New York";
+              message.country = message.country || "USA";
+              message.os = message.os || "iOS";
+              message.deviceType = message.deviceType || "Mobile";
               setShowPremiumModal(false);
             }}
             className="btn-gradient"
@@ -310,7 +366,7 @@ export const MessageDetail: React.FC<MessageDetailProps> = ({
               marginBottom: '12px'
             }}
           >
-            <CreditCard size={18} /> Unlock Hints - $1.99/wk
+            <CreditCard size={18} /> Unlock Hints - ₹{import.meta.env.VITE_PRICE_MONTHLY || 99}/mo
           </button>
           
           <p style={{ fontSize: '0.75rem', color: '#5C6A7F' }}>
